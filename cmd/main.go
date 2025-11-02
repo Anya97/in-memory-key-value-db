@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"in-memory-key-value-db/internal/app/compute"
+	"in-memory-key-value-db/internal/app/pipeline"
 	"in-memory-key-value-db/internal/storage/engine"
 	"os"
 	"strings"
@@ -14,8 +15,9 @@ func main() {
 	logger, _ := zap.NewDevelopment()
 	defer logger.Sync()
 
-	eng := engine.NewEngine(logger)
-	computer := compute.NewComputer(eng)
+	storage := engine.NewEngine(logger)
+	processor := compute.NewCompute()
+	pl := pipeline.NewPipeline(processor, storage)
 
 	scanner := bufio.NewScanner(os.Stdin)
 
@@ -27,11 +29,15 @@ func main() {
 		if !scanner.Scan() {
 			break
 		}
+
 		input := strings.TrimSpace(scanner.Text())
-		err := computer.Execute(input)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
+		if input == "" {
 			continue
+		}
+
+		err := pl.Execute(input)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error:", err)
 		}
 	}
 }

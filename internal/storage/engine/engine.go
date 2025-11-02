@@ -43,7 +43,6 @@ func (e *Engine) Delete(key string) error {
 		e.logger.Info("Delete: entry not found",
 			zap.String("key", key),
 		)
-		return ErrKeyNotFound
 	}
 
 	delete(e.storage, key)
